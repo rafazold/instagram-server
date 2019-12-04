@@ -7,10 +7,13 @@ mongoose.model('User', {
         required: true,
         unique: true,
         validate(value) {
-            return value.includes('@') && value.length > 4;
+            return value.length > 4;
         }
     },
-    password: String,
+    password: {
+        type: String,
+        validate: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/
+    },
     birthDate: Date,
     gender: {
         type: String,
