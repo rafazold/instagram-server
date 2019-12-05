@@ -13,6 +13,7 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({ storage: storage });
+const authorize = require('../helpers/authorize');
 
 function postsRoutes(app) {
     app
@@ -21,13 +22,14 @@ function postsRoutes(app) {
             .find({})
             .sort('-created')
             .limit(Number(req.query.limit || 20))
-            .offset(Number(req.query.limit || 0))
+            .skip(Number(req.query.limit || 0))
             .then(list => res.json(list).end())
     })
-        .post('/api/posts', upload.single('image'), (req, res) => {
+        .post('/api/posts', authorize, upload.single('image'), (req, res) => {
             const post = new Post(req.body);
 
             post.image = req.file.filename;
+            post.user = req.user;
             post.save()
                 .then(post => res.json(post).end())
                 .catch(err => res.status(400).json({message: "Post not added"}).end())
@@ -38,14 +40,14 @@ function postsRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
-        .delete('/api/posts/:postId', (req, res) => {
+        .delete('/api/posts/:postId', authorize, (req, res) => {
             Post.findById(req.params.postId)
                 .then(post => post.remove())
                 .then(post => res.json(post).end())
                 .catch(() => res.status(400).end())
 
         })
-        .put('/api/posts/:postId', (req, res) => {
+        .put('/api/posts/:postId', authorize, (req, res) => {
             Post.findById(req.params.postId)
                 .then(post => Object.assign(post, req.body))
                 .then(post => post.save())
@@ -55,6 +57,25 @@ function postsRoutes(app) {
                     res.status(400).json({message: "Post not added"}).end()
                 });
         })
+        .post('/api/posts/:postId/like', authorize, (req, res) => {
+            const user = req.user;
+            const status = req.body.status || false; //status should be true or false(state in front)
+            Post.findById(req.params.postId)
+                .then(post => {
+                    post.likes = post.likes.filter(like => !like.equals(user));
+                    if (status) {
+                        post.likes.push(user);
+                    }
+                    return post.save();
+                })
+                .then(() => {
+                    res.status(200).json({
+                        status: status
+                    }).end();
+                })
+                .catch(() => res.status(400).end())
+        })
+
 }
 
 //in .delete it's recommended to check the permission of the request after the findById

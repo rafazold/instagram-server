@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
 const jwt = require('jsonwebtoken');
-
+const {jwtSecret} = require('../config');
 
 function usersRoutes(app) {
     app
@@ -15,7 +15,7 @@ function usersRoutes(app) {
 
             user.save()
                 .then(user => res.json(user).end())
-                .catch(err => res.status(400).json({message: "User not added"}).end(console.log(err)))
+                .catch(err => res.status(400).json({message: "User not added"}).end())
         })
         .get('/api/users/:userId', (req, res) => {
             User.findById(req.params.userId)
@@ -52,9 +52,7 @@ function usersRoutes(app) {
                        res.status(403).end();
                        return;
                    }
-                   const token = jwt.sign({
-                       exp: 60 * 60 * 24 * 7,
-                       data: user._id}, 'hyJhsdl76sflJujsl');
+                   const token = jwt.sign({data: user._id}, jwtSecret, {expiresIn: '7d'});
                    res.cookie('user', token);
                    res.end();
                })

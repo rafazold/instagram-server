@@ -13,6 +13,7 @@ function commentsRoutes(app) {
         })
         .post('/api/posts/:postId/comments', (req, res) => {
             const comment = new Comment(req.body);
+            comment.user = req.user._id;
 
             comment
                 .save()
