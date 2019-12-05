@@ -38,6 +38,7 @@ app.use(function (req, res, next) {
 
 require('./routes/users')(app);
 require('./routes/posts')(app);
+require('./routes/comments')(app);
 
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
