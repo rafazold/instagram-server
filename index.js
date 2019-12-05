@@ -2,37 +2,36 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
-// const {connect} = require("./models"); changed with:
 require("./models");
 const mongoose = require('mongoose');
-const cookieparser = require('cookie-parser');
-
-
-// connect().then(db => {
-//     console.log('db is connected');
-// });
-
+const cookieParser = require('cookie-parser');
+const {port} = require('./config');
+const jwt = require('jsonwebtoken');
+const {jwtSecret} = require('./config');
 
 const app = express();
-const port = 4000;
 
 app.use(express.static('public'));
 app.use(morgan('combined'));
 app.use(cors());
-app.use(bodyParser.json());
-
+app.use(cookieParser());
 //for password validation:
 
-app.use(function (req, res, next) {
-    const User = mongoose.model('User');
+app.use(bodyParser.json());
 
-    User.findOne({
-        user: req.headers.user,
-        password: req.headers.password
-    })
-        .then(user => req.user = user)
-        .then(() => next())
-        .catch(() => res.status(400).end());
+app.use(function (req, res, next) {
+
+    console.log('cookies:', req.cookies);
+    if (req.cookies.user) {
+        try {
+            req.user = jwt.verify(req.cookies.user, jwtSecret).data;
+        } catch(e) {
+            res.cookie('user', '');
+            res.status(403).json({message: 'user not authorized'}).end();
+            return;
+        }
+    }
+    next();
 });
 
 
