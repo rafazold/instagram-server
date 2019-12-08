@@ -2,25 +2,25 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
-require("./models");
-const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const {port} = require('./config');
+const {port, jwtSecret} = require('./config');
 const jwt = require('jsonwebtoken');
-const {jwtSecret} = require('./config');
+
+require("./models");
 
 const app = express();
 
 app.use(express.static('public'));
 app.use(morgan('combined'));
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credential: true
+}));
+
+
 app.use(cookieParser());
-//for password validation:
-
 app.use(bodyParser.json());
-
 app.use(function (req, res, next) {
-
     console.log('cookies:', req.cookies);
     if (req.cookies.user) {
         try {

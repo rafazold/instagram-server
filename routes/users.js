@@ -17,6 +17,11 @@ function usersRoutes(app) {
                 .then(user => res.json(user).end())
                 .catch(err => res.status(400).json({message: "User not added"}).end())
         })
+        .get('/api/users/me', (req, res) => {
+            User.findById(req.user)
+                .select('name username birthDate gender about')
+                .then(user => res.json(user));
+        })
         .get('/api/users/:userId', (req, res) => {
             User.findById(req.params.userId)
                 .select('name username birthDate gender about')
@@ -48,16 +53,20 @@ function usersRoutes(app) {
                    password: req.body.password
                })
                .then(user => {
+                   console.log('before: ', user);
                    if(!user) {
+                       console.log('no user');
                        res.status(403).end();
                        return;
                    }
                    const token = jwt.sign({data: user._id}, jwtSecret, {expiresIn: '7d'});
-                   res.cookie('user', token);
+                   console.log(token);
+                   res.cookie('user', token, { expires: new Date(Date.now() + 900000000) });
                    res.end();
                })
                .catch(err => res.status(400).send(err));
         })
+
 }
 
 //in .delete it's recommended to check the permission of the request after the findById

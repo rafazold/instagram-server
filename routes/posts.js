@@ -15,6 +15,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const authorize = require('../helpers/authorize');
 
+
 function postsRoutes(app) {
     app
         .get('/api/posts', (req, res) => {
