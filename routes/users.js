@@ -22,6 +22,11 @@ function usersRoutes(app) {
                 .select('name username birthDate gender about')
                 .then(user => res.json(user));
         })
+        .get('/api/users/logout', (req, res) => {
+            res.cookie('user', '');
+            res.status(200).json({message: 'logged out'});
+            res.end();
+        })
         .get('/api/users/:userId', (req, res) => {
             User.findById(req.params.userId)
                 .select('name username birthDate gender about')
