@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 const authorize = require('../helpers/authorize');
-
+//TODO: add authorize to all needed endpoints
 
 function postsRoutes(app) {
     app
@@ -24,6 +24,7 @@ function postsRoutes(app) {
             .sort('-created')
             .limit(Number(req.query.limit || 20))
             .skip(Number(req.query.limit || 0))
+            .populate('user', 'username')
             .then(list => res.json(list).end())
     })
         .post('/api/posts', authorize, upload.single('image'), (req, res) => {
