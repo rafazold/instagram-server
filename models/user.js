@@ -12,9 +12,10 @@ mongoose.model('User', {
     },
     password: {
         type: String,
-        validate: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/
+        validate: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{2,}$/
     },
     birthDate: Date,
+    avatarColor: String,
     gender: {
         type: String,
         enum: ['f', 'm']
