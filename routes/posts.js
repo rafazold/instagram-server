@@ -24,8 +24,9 @@ function postsRoutes(app) {
             .sort('-created')
             .limit(Number(req.query.limit || 20))
             .skip(Number(req.query.limit || 0))
-            .populate('user', 'username')
+            .populate('user', 'username avatar')
             .then(list => res.json(list).end())
+            .catch(err => res.status(400).json({mesage: "can't fetch posts"}).end())
     })
         .post('/api/posts', authorize, upload.single('image'), (req, res) => {
             const post = new Post(req.body);
@@ -34,7 +35,7 @@ function postsRoutes(app) {
             post.user = req.user;
             post.save()
                 .then(post => res.json(post).end())
-                .catch(err => res.status(400).json({message: "Post not added"}).end())
+                .catch(err => res.status(400).json({message: "Post not added", error: err}).end())
         })
         .get('/api/posts/:postId', (req, res) => {
             Post.findById(req.params.postId)

@@ -15,7 +15,7 @@ mongoose.model('User', {
         validate: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{2,}$/
     },
     birthDate: Date,
-    avatarColor: String,
+    avatar: String,
     gender: {
         type: String,
         enum: ['f', 'm']

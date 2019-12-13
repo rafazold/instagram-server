@@ -1,7 +1,21 @@
 const mongoose = require('mongoose');
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/');
+    },
+    filename: function (req, file, cb) {
+        const nameArr = file.originalname.split('.');
+        const extension = nameArr[nameArr.length - 1];
+        const randomName = Math.random().toString(36).substring(7);
+        cb(null, randomName + '.' + extension);
+    }
+});
+const upload = multer({ storage: storage });
 const User = mongoose.model('User');
 const jwt = require('jsonwebtoken');
 const {jwtSecret} = require('../config');
+const authorize = require('../helpers/authorize');
 
 function usersRoutes(app) {
     app
@@ -10,16 +24,16 @@ function usersRoutes(app) {
             .find({})
             .then(list => res.json(list).end())
     })
-        .post('/api/users', (req, res) => {
+        .post('/api/users', upload.single('avatar'),(req, res) => {
             const user = new User(req.body);
-
+            user.avatar = req.file.filename;
             user.save()
                 .then(user => res.json(user).end())
                 .catch(err => res.status(400).json({message: "User not added"}).end())
         })
         .get('/api/users/me', (req, res) => {
             User.findById(req.user)
-                .select('name username birthDate gender about')
+                .select('name username birthDate gender about avatarColor')
                 .then(user => res.json(user));
         })
         .get('/api/users/logout', (req, res) => {
@@ -34,14 +48,14 @@ function usersRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
-        .delete('/api/users/:userId', (req, res) => {
+        .delete('/api/users/:userId', authorize, (req, res) => {
             User.findById(req.params.userId)
                 .then(user => user.remove())
                 .then(user => res.json(user).end())
                 .catch(() => res.status(400).end())
 
         })
-        .put('/api/users/:userId', (req, res) => {
+        .put('/api/users/:userId', authorize, (req, res) => {
             User.findById(req.params.userId)
                 .then(user => Object.assign(user, req.body))
                 .then(user => user.save())
