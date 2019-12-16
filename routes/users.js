@@ -33,7 +33,7 @@ function usersRoutes(app) {
         })
         .get('/api/users/me', (req, res) => {
             User.findById(req.user)
-                .select('name username birthDate gender about avatarColor')
+                .select('name username birthDate gender about avatar')
                 .then(user => res.json(user));
         })
         .get('/api/users/logout', (req, res) => {
@@ -55,15 +55,25 @@ function usersRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
+        // .put('/api/users/:userId', authorize, (req, res) => {
+        //     User.findById(req.params.userId)
+        //         .then(user => Object.assign(user, req.body))
+        //         .then(user => user.save())
+        //         .then(user => res.json(user).end())
+        //         .catch(err => {
+        //             console.error(err);
+        //             res.status(400).json({message: "User not added"}).end()
+        //         });
+        // })
         .put('/api/users/:userId', authorize, (req, res) => {
-            User.findById(req.params.userId)
-                .then(user => Object.assign(user, req.body))
-                .then(user => user.save())
+            console.log(req.body);
+            User.findByIdAndUpdate(req.params.userId,{$set:req.body},{new:true})
                 .then(user => res.json(user).end())
                 .catch(err => {
                     console.error(err);
                     res.status(400).json({message: "User not added"}).end()
                 });
+
         })
         .post('/api/users/login', (req, res) => {
            User
