@@ -7,7 +7,7 @@ mongoose.model('User', {
         required: true,
         unique: true,
         validate(value) {
-            return value.length > 4;
+            return value.length > 2;
         }
     },
     password: {

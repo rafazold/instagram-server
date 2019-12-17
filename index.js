@@ -5,7 +5,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const {port, jwtSecret} = require('./config');
 const jwt = require('jsonwebtoken');
-const formidableMiddleware = require('express-formidable');
+
 
 require("./models");
 
@@ -18,7 +18,6 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(formidableMiddleware());
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(function (req, res, next) {

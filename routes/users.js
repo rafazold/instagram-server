@@ -16,6 +16,7 @@ const User = mongoose.model('User');
 const jwt = require('jsonwebtoken');
 const {jwtSecret} = require('../config');
 const authorize = require('../helpers/authorize');
+const formidableMiddleware = require('express-formidable');
 
 function usersRoutes(app) {
     app
@@ -55,7 +56,7 @@ function usersRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
-        .put('/api/users/:userId', authorize, (req, res) => {
+        .put('/api/users/:userId',formidableMiddleware(), authorize, (req, res) => {
             console.log(req.fields);
             User.findByIdAndUpdate(req.params.userId,{$set:req.fields},{new:true})
                 .then(user => res.json(user).end())
