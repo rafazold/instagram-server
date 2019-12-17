@@ -55,19 +55,9 @@ function usersRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
-        // .put('/api/users/:userId', authorize, (req, res) => {
-        //     User.findById(req.params.userId)
-        //         .then(user => Object.assign(user, req.body))
-        //         .then(user => user.save())
-        //         .then(user => res.json(user).end())
-        //         .catch(err => {
-        //             console.error(err);
-        //             res.status(400).json({message: "User not added"}).end()
-        //         });
-        // })
         .put('/api/users/:userId', authorize, (req, res) => {
-            console.log(req.body);
-            User.findByIdAndUpdate(req.params.userId,{$set:req.body},{new:true})
+            console.log(req.fields);
+            User.findByIdAndUpdate(req.params.userId,{$set:req.fields},{new:true})
                 .then(user => res.json(user).end())
                 .catch(err => {
                     console.error(err);
