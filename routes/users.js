@@ -4,7 +4,7 @@ const multerGoogleStorage = require("multer-google-storage");
 
 const User = mongoose.model('User');
 const jwt = require('jsonwebtoken');
-const {jwtSecret, keyFilename, projectId, bucket} = require('../config');
+const {jwtSecret} = require('../config');
 
 const authorize = require('../helpers/authorize');
 const uploadHandler = multer({
@@ -15,11 +15,7 @@ const uploadHandler = multer({
             const extension = nameArr[nameArr.length - 1];
             const randomName = Math.random().toString(36).substring(7);
             cb(null, randomName + '.' + extension);
-        },
-        keyFilename: keyFilename,
-        projectId: projectId,
-        bucket: bucket
-
+        }
     })
 });
 

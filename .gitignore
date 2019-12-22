@@ -3,3 +3,4 @@ node_modules
 public/*
 !public/.gitkeep
 .env
+config/storage.json
