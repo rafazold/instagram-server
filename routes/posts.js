@@ -2,19 +2,7 @@ const mongoose = require('mongoose');
 const Post = mongoose.model('Post');
 const multer = require('multer');
 const multerGoogleStorage = require("multer-google-storage");
-const {keyFilename, projectId, bucket} = require('../config');
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/');
-    },
-    filename: function (req, file, cb) {
-        const nameArr = file.originalname.split('.');
-        const extension = nameArr[nameArr.length - 1];
-        const randomName = Math.random().toString(36).substring(7);
-        cb(null, randomName + '.' + extension);
-    }
-});
-// const upload = multer({ storage: storage });
+
 const uploadHandler = multer({
     storage: multerGoogleStorage.storageEngine({
         contentType: (req, file) => file.mimetype,
@@ -23,11 +11,7 @@ const uploadHandler = multer({
             const extension = nameArr[nameArr.length - 1];
             const randomName = Math.random().toString(36).substring(7);
             cb(null, randomName + '.' + extension);
-        },
-        keyFilename: keyFilename,
-        projectId: projectId,
-        bucket: bucket
-
+        }
     })
 });
 const authorize = require('../helpers/authorize');
