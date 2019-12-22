@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Post = mongoose.model('Post');
 const multer = require('multer');
+const multerGoogleStorage = require("multer-google-storage");
+const {keyFilename, projectId, bucket} = require('../config');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/');
@@ -12,7 +14,22 @@ const storage = multer.diskStorage({
         cb(null, randomName + '.' + extension);
     }
 });
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
+const uploadHandler = multer({
+    storage: multerGoogleStorage.storageEngine({
+        contentType: (req, file) => file.mimetype,
+        filename: function (req, file, cb) {
+            const nameArr = file.originalname.split('.');
+            const extension = nameArr[nameArr.length - 1];
+            const randomName = Math.random().toString(36).substring(7);
+            cb(null, randomName + '.' + extension);
+        },
+        keyFilename: keyFilename,
+        projectId: projectId,
+        bucket: bucket
+
+    })
+});
 const authorize = require('../helpers/authorize');
 //TODO: add authorize to all needed endpoints
 
@@ -28,10 +45,10 @@ function postsRoutes(app) {
             .then(list => res.json(list).end())
             .catch(err => res.status(400).json({mesage: "can't fetch posts"}).end())
     })
-        .post('/api/posts', authorize, upload.single('image'), (req, res) => {
+        .post('/api/posts', authorize, uploadHandler.single('image'), (req, res) => {
             const post = new Post(req.body);
 
-            post.image = req.file.filename;
+            post.image = req.file.path;
             post.user = req.user;
             post.save()
                 .then(post => res.json(post).end())

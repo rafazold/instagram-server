@@ -1,21 +1,28 @@
 const mongoose = require('mongoose');
 const multer = require('multer');
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/');
-    },
-    filename: function (req, file, cb) {
-        const nameArr = file.originalname.split('.');
-        const extension = nameArr[nameArr.length - 1];
-        const randomName = Math.random().toString(36).substring(7);
-        cb(null, randomName + '.' + extension);
-    }
-});
-const upload = multer({ storage: storage });
+const multerGoogleStorage = require("multer-google-storage");
+
 const User = mongoose.model('User');
 const jwt = require('jsonwebtoken');
-const {jwtSecret} = require('../config');
+const {jwtSecret, keyFilename, projectId, bucket} = require('../config');
+
 const authorize = require('../helpers/authorize');
+const uploadHandler = multer({
+    storage: multerGoogleStorage.storageEngine({
+        contentType: (req, file) => file.mimetype,
+        filename: function (req, file, cb) {
+            const nameArr = file.originalname.split('.');
+            const extension = nameArr[nameArr.length - 1];
+            const randomName = Math.random().toString(36).substring(7);
+            cb(null, randomName + '.' + extension);
+        },
+        keyFilename: keyFilename,
+        projectId: projectId,
+        bucket: bucket
+
+    })
+});
+
 
 function usersRoutes(app) {
     app
@@ -24,12 +31,16 @@ function usersRoutes(app) {
             .find({})
             .then(list => res.json(list).end())
     })
-        .post('/api/users', upload.single('avatar'),(req, res) => {
+        .post('/api/users', uploadHandler.single('avatar'),(req, res) => {
             const user = new User(req.body);
-            user.avatar = req.file.filename;
+            user.avatar = req.file.path;
             user.save()
-                .then(user => res.json(user).end())
-                .catch(err => res.status(400).json({message: "User not added"}).end())
+                .then(user => {
+                    const token = jwt.sign({data: user._id}, jwtSecret, {expiresIn: '7d'});
+                    res.cookie('user', token, { expires: new Date(Date.now() + 900000000) });
+                    res.json(user).end()
+                })
+                .catch(err => res.status(400).json({message: "User not added", err: err}).end())
         })
         .get('/api/users/me', (req, res) => {
             User.findById(req.user)
@@ -55,8 +66,8 @@ function usersRoutes(app) {
                 .catch(() => res.status(400).end())
 
         })
-        .put('/api/users/:userId', authorize, upload.single('avatar'), (req, res) => {
-            req.body.avatar = req.file.filename;
+        .put('/api/users/:userId', authorize, uploadHandler.single('avatar'), (req, res) => {
+            req.body.avatar = req.file.path;
             User.findById(req.params.userId)
                 .then(user => Object.assign(user, req.body))
                 .then(user => user.save())
@@ -73,14 +84,13 @@ function usersRoutes(app) {
                    password: req.body.password
                })
                .then(user => {
-                   console.log('before: ', user);
                    if(!user) {
                        console.log('no user');
                        res.status(403).end();
                        return;
                    }
+                   //TODO: add this to register.
                    const token = jwt.sign({data: user._id}, jwtSecret, {expiresIn: '7d'});
-                   console.log(token);
                    res.cookie('user', token, { expires: new Date(Date.now() + 900000000) });
                    res.end();
                })
