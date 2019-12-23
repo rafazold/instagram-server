@@ -15,7 +15,6 @@ const uploadHandler = multer({
     })
 });
 const authorize = require('../helpers/authorize');
-//TODO: add authorize to all needed endpoints
 
 function postsRoutes(app) {
     app
@@ -26,8 +25,12 @@ function postsRoutes(app) {
             .limit(Number(req.query.limit || 20))
             .skip(Number(req.query.limit || 0))
             .populate('user', 'username avatar')
-            .then(list => res.json(list).end())
-            .catch(err => res.status(400).json({mesage: "can't fetch posts"}).end())
+            .lean()
+            .then(list => {
+                const postsList = list.map(post => ({...post, isLiked: post.likes.some(like => like.equals(req.user))}));
+                    res.json(postsList).end()
+            })
+            .catch(err => res.status(400).json({message: "can't fetch posts"}).end())
     })
         .post('/api/posts', authorize, uploadHandler.single('image'), (req, res) => {
             const post = new Post(req.body);
@@ -63,7 +66,7 @@ function postsRoutes(app) {
         })
         .post('/api/posts/:postId/like', authorize, (req, res) => {
             const user = req.user;
-            const status = req.body.status || false; //status should be true or false(state in front)
+            const status = req.body.likeStatus || false; //status should be true or false(state in front)
             Post.findById(req.params.postId)
                 .then(post => {
                     post.likes = post.likes.filter(like => !like.equals(user));
@@ -74,7 +77,7 @@ function postsRoutes(app) {
                 })
                 .then(() => {
                     res.status(200).json({
-                        status: status
+                        likeStatus: status
                     }).end();
                 })
                 .catch(() => res.status(400).end())
