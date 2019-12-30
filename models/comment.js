@@ -12,5 +12,9 @@ mongoose.model('Comment', {
     created: {
         type: Date,
         default: Date.now
+    },
+    post: {
+        type: mongoose.Types.ObjectId,
+        ref:'Post'
     }
 });

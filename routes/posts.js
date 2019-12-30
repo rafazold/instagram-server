@@ -43,7 +43,11 @@ function postsRoutes(app) {
         })
         .get('/api/posts/:postId', (req, res) => {
             Post.findById(req.params.postId)
-                .then(post => res.json(post).end())
+                .populate('user', 'username avatar')
+                .lean()
+                .then(post => {
+                    (post.isLiked = post.likes.some(like => like.equals(req.user)))
+                    res.json(post).end()})
                 .catch(() => res.status(400).end())
 
         })
