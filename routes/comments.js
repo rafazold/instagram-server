@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const Comment = mongoose.model('Comment');
+const authorize = require('../helpers/authorize');
 
 function commentsRoutes(app) {
     app
         .get('/api/posts/:postId/comments', (req, res) => {
-            console.log('HERE WE GO!!!');
             Comment
                 .aggregate([
                     { $match : { post: mongoose.Types.ObjectId(req.params.postId) } },
@@ -24,11 +24,11 @@ function commentsRoutes(app) {
                 .sort('-created')
                 // .populate('user')
                 .then(list => res.json(list).end())
-                .catch(err => res.status(400).json({message: err}).end())
+                .catch(err => res.status(400).json({message: "Cannot get comments"}).end())
         })
         .post('/api/posts/:postId/comments', (req, res) => {
             const comment = new Comment(req.body);
-            console.log(req.body);
+            console.log('COMMENT REQ: ', req.body);
             comment.user = req.user;
             comment.post = req.params.postId;
             comment
@@ -37,14 +37,14 @@ function commentsRoutes(app) {
                 .catch(err => res.status(400).json({message: "Comment not added"}).end())
         })
         //should the endpoint be /comments/ID or as it's below?
-        .delete('/api/posts/:postId/:commentId', (req, res) => {
+        .delete('/api/posts/:postId/:commentId', authorize, (req, res) => {
             Comment.findById(req.params.commentId)
                 .then(comment => comment.remove())
                 .then(comment => res.json(comment).end())
                 .catch(() => res.status(400).end())
 
         })
-        .put('/api/posts/:postId/:commentid', (req, res) => {
+        .put('/api/posts/:postId/:commentid', authorize, (req, res) => {
             Comment.findById(req.params.commentid)
                 .then(comment => Object.assign(comment, req.body))
                 .then(comment => comment.save())
