@@ -39,6 +39,7 @@ function postsRoutes(app) {
             post.user = req.user;
             post.save()
                 .then(post => res.json(post).end())
+
                 .catch(err => res.status(400).json({message: "Post not added", error: err}).end())
         })
         .get('/api/posts/:postId', (req, res) => {
