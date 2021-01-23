@@ -28,10 +28,13 @@ function usersRoutes(app) {
             .then(list => res.json(list).end())
     })
         .post('/api/users', uploadHandler.single('avatar'),(req, res) => {
+            
             const user = new User(req.body);
-            user.avatar = req.file.path;
+            req.file !== undefined ? user.avatar = req.file.path : user.avatar = '';
+            console.log('got here0', user);
             user.save()
                 .then(user => {
+                    console.log('got here1');
                     const token = jwt.sign({data: user._id}, jwtSecret, {expiresIn: '7d'});
                     res.cookie('user', token, { expires: new Date(Date.now() + 900000000) });
                     res.json(user).end()
